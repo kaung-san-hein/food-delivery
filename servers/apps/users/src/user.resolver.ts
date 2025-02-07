@@ -42,7 +42,7 @@ export class UsersResolver {
   }
 
   @Mutation(() => LoginResponse)
-  async Login(
+  async login(
     @Args('email') email: string,
     @Args('password') password: string,
   ): Promise<LoginResponse> {
