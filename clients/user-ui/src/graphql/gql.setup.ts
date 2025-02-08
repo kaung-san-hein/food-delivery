@@ -1,8 +1,22 @@
-import { ApolloClient, InMemoryCache } from "@apollo/client"
+import { ApolloClient, ApolloLink, createHttpLink, InMemoryCache } from "@apollo/client";
+import Cookies from "js-cookie";
 
-console.log(process.env.NEXT_PUBLIC_SERVER_URL)
+const httpLink = createHttpLink({
+    uri: process.env.NEXT_PUBLIC_SERVER_URL
+})
+
+const authMiddleware = new ApolloLink((operation, forward) => {
+  operation.setContext({
+    headers: {
+      accesstoken: Cookies.get("access_token"),
+      refreshtoken: Cookies.get("refresh_token")
+    },
+  });
+
+  return forward(operation)
+});
 
 export const graphqlClient = new ApolloClient({
-    uri: process.env.NEXT_PUBLIC_SERVER_URL,
-    cache: new InMemoryCache(),
-})
+  link: authMiddleware.concat(httpLink),
+  cache: new InMemoryCache(),
+});
