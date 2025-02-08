@@ -10,6 +10,8 @@ async function bootstrap() {
   app.setBaseViewsDir(join(__dirname, '..', 'servers/email-templates'));
   app.setViewEngine('ejs');
 
+  app.enableCors()
+
   await app.listen(4001);
 }
 bootstrap();

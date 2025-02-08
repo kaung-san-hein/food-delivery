@@ -1,10 +1,14 @@
+import { LOGIN_USER } from "@/src/graphql/actions/login.action";
 import styles from "@/src/utils/styles";
+import { useMutation } from "@apollo/client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import toast from "react-hot-toast";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { FcGoogle } from "react-icons/fc";
 import { z } from "zod";
+import Cookies from "js-cookie";
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -20,6 +24,8 @@ const Login = ({
   setActiveState: (e: string) => void;
   setOpen: (e: boolean) => void;
 }) => {
+  const [Login, { loading }] = useMutation(LOGIN_USER);
+
   const [show, setShow] = useState(false);
 
   const {
@@ -31,9 +37,24 @@ const Login = ({
     resolver: zodResolver(formSchema),
   });
 
-  const onSubmit = (data: LoginSchema) => {
-    console.log(data);
-    reset();
+  const onSubmit = async (data: LoginSchema) => {
+    const loginData = {
+      email: data.email,
+      password: data.password,
+    };
+    const response = await Login({
+      variables: loginData,
+    });
+    if (response.data.login.user) {
+      toast.success("Login Successful!");
+      Cookies.set("refresh_token", response.data.login.refreshToken);
+      Cookies.set("access_token", response.data.login.accessToken);
+      setOpen(false);
+      reset();
+      window.location.reload();
+    } else {
+      toast.error(response.data.login.error.message);
+    }
   };
 
   return (
@@ -86,7 +107,7 @@ const Login = ({
           <input
             type="submit"
             value="Login"
-            disabled={isSubmitting}
+            disabled={isSubmitting || loading}
             className={`${styles.button} mt-3`}
           />
         </div>
